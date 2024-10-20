@@ -1,36 +1,29 @@
 import { useState, useEffect } from "react";
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
+
 interface UserFormProps {
-  addUser: (user: {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-  }) => void;
-  editingUser: {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-  } | null;
-  updateUser: (user: {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-  }) => void;
+  addUser: (user: User) => void;
+  editingUser: User | null;
+  updateUser: (user: User) => void;
+  isDarkMode: boolean;
 }
 
 export default function UserForm({
   addUser,
   editingUser,
   updateUser,
+  isDarkMode,
 }: UserFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  // Effect to populate form fields if editingUser is not null
   useEffect(() => {
     if (editingUser) {
       setName(editingUser.name);
@@ -38,17 +31,14 @@ export default function UserForm({
       setPhone(editingUser.phone);
     }
   }, [editingUser]);
-
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const newUser = {
       id: editingUser ? editingUser.id : Math.floor(Math.random() * 10000),
       name,
       email,
       phone,
     };
-
     if (editingUser) {
       updateUser(newUser);
     } else {
@@ -67,11 +57,11 @@ export default function UserForm({
       </h2>
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 max-w-lg mx-auto bg-white p-8 shadow-md rounded-lg">
+        className="space-y-6 max-w-lg mx-auto bg-white p-8 shadow-md rounded-lg dark:bg-gray-900">
         <div>
           <label
             htmlFor="name"
-            className="block text-gray-700 font-semibold mb-2">
+            className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
             Name
           </label>
           <input
@@ -81,13 +71,17 @@ export default function UserForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isDarkMode
+                ? "bg-gray-800 text-gray-200"
+                : "bg-white text-gray-900"
+            }`}
           />
         </div>
         <div>
           <label
             htmlFor="email"
-            className="block text-gray-700 font-semibold mb-2">
+            className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
             Email
           </label>
           <input
@@ -97,13 +91,17 @@ export default function UserForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isDarkMode
+                ? "bg-gray-800 text-gray-200"
+                : "bg-white text-gray-900"
+            }`}
           />
         </div>
         <div>
           <label
             htmlFor="phone"
-            className="block text-gray-700 font-semibold mb-2">
+            className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
             Phone
           </label>
           <input
@@ -113,7 +111,11 @@ export default function UserForm({
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isDarkMode
+                ? "bg-gray-800 text-gray-200"
+                : "bg-white text-gray-900"
+            }`}
           />
         </div>
         <button
