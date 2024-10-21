@@ -20,34 +20,39 @@ export default function UserForm({
   updateUser,
   isDarkMode,
 }: UserFormProps) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [formValues, setFormValues] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
 
   useEffect(() => {
     if (editingUser) {
-      setName(editingUser.name);
-      setEmail(editingUser.email);
-      setPhone(editingUser.phone);
+      setFormValues({
+        name: editingUser.name,
+        email: editingUser.email,
+        phone: editingUser.phone,
+      });
     }
   }, [editingUser]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      [id]: value,
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const newUser = {
-      id: editingUser ? editingUser.id : Math.floor(Math.random() * 10000),
-      name,
-      email,
-      phone,
+      id: editingUser ? editingUser.id : Date.now(),
+      ...formValues,
     };
-    if (editingUser) {
-      updateUser(newUser);
-    } else {
-      addUser(newUser);
-    }
 
-    setName("");
-    setEmail("");
-    setPhone("");
+    editingUser ? updateUser(newUser) : addUser(newUser);
+    setFormValues({ name: "", email: "", phone: "" });
   };
 
   return (
@@ -55,6 +60,7 @@ export default function UserForm({
       <h2 className="text-2xl font-semibold text-center mb-6">
         {editingUser ? "Edit User" : "Add User"}
       </h2>
+
       <form
         onSubmit={handleSubmit}
         className="space-y-6 max-w-lg mx-auto bg-white p-8 shadow-md rounded-lg dark:bg-gray-900">
@@ -68,8 +74,8 @@ export default function UserForm({
             type="text"
             id="name"
             placeholder="Enter name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={formValues.name}
+            onChange={handleChange}
             required
             className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               isDarkMode
@@ -78,6 +84,7 @@ export default function UserForm({
             }`}
           />
         </div>
+
         <div>
           <label
             htmlFor="email"
@@ -88,8 +95,8 @@ export default function UserForm({
             type="email"
             id="email"
             placeholder="Enter email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formValues.email}
+            onChange={handleChange}
             required
             className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               isDarkMode
@@ -98,6 +105,7 @@ export default function UserForm({
             }`}
           />
         </div>
+
         <div>
           <label
             htmlFor="phone"
@@ -108,8 +116,8 @@ export default function UserForm({
             type="tel"
             id="phone"
             placeholder="Enter phone number"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            value={formValues.phone}
+            onChange={handleChange}
             required
             className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               isDarkMode
@@ -118,6 +126,7 @@ export default function UserForm({
             }`}
           />
         </div>
+
         <button
           type="submit"
           className="w-full bg-green-500 text-black py-3 px-6 rounded-lg hover:bg-green-600 focus:ring-4 focus:ring-green-300 transition ease-in-out">
