@@ -32,55 +32,78 @@ interface User {
   phone: string;
 }
 
-export default function Dashboard({ users }: { users: User[] }) {
+const useUserStats = (users: User[]) => {
   const [userStats, setUserStats] = useState({
     totalUsers: 0,
     usersLastWeek: 0,
   });
 
   useEffect(() => {
+    const calculateUserStats = () => {
+      const totalUsers = users.length;
+      const usersLastWeek = users.filter((user) => {
+        const createdAt = new Date(user.id); // Assuming ID is timestamp
+        const lastWeek = new Date();
+        lastWeek.setDate(lastWeek.getDate() - 7);
+        return createdAt > lastWeek;
+      }).length;
+
+      setUserStats({ totalUsers, usersLastWeek });
+    };
+
     calculateUserStats();
   }, [users]);
 
-  const calculateUserStats = () => {
-    const totalUsers = users.length;
-    const usersLastWeek = users.filter((user) => {
-      const createdAt = new Date(user.id);
-      const lastWeek = new Date();
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      return createdAt > lastWeek;
-    }).length;
+  return userStats;
+};
 
-    setUserStats({ totalUsers, usersLastWeek });
-  };
+const getChartData = (userStats: {
+  totalUsers: number;
+  usersLastWeek: number;
+}) => ({
+  labels: ["Total Users", "Users Added Last Week"],
+  datasets: [
+    {
+      label: "User Stats",
+      data: [userStats.totalUsers, userStats.usersLastWeek],
+      backgroundColor: ["#4caf50", "#2196f3"],
+      borderColor: ["#4caf50", "#2196f3"],
+      borderWidth: 1,
+    },
+  ],
+});
 
-  const chartData = {
-    labels: ["Total Users", "Users Added Last Week"],
-    datasets: [
-      {
-        label: "User Stats",
-        data: [userStats.totalUsers, userStats.usersLastWeek],
-        backgroundColor: ["#4caf50", "#2196f3"],
-        borderColor: ["#4caf50", "#2196f3"],
-        borderWidth: 1,
-      },
-    ],
-  };
+const ChartContainer = ({
+  title,
+  chartType,
+  data,
+}: {
+  title: string;
+  chartType: "Bar" | "Line";
+  data: any;
+}) => {
+  return (
+    <div className="p-4 bg-white shadow-lg rounded-lg">
+      <h3 className="text-lg font-semibold mb-4">{title}</h3>
+      {chartType === "Bar" ? <Bar data={data} /> : <Line data={data} />}
+    </div>
+  );
+};
+
+export default function Dashboard({ users }: { users: User[] }) {
+  const userStats = useUserStats(users); // Using custom hook
+  const chartData = getChartData(userStats); // Chart data abstraction
 
   return (
     <div>
       <h2 className="text-2xl font-bold mt-20 mb-4">User Statistics</h2>
       <div className="grid grid-cols-2 gap-4">
-        <div className="p-4 bg-white shadow-lg rounded-lg">
-          <h3 className="text-lg font-semibold mb-4">Total Users</h3>
-          <Bar data={chartData} />
-        </div>
-        <div className="p-4 bg-white shadow-lg rounded-lg">
-          <h3 className="text-lg font-semibold mb-4">
-            User Activity Over Time
-          </h3>
-          <Line data={chartData} />
-        </div>
+        <ChartContainer title="Total Users" chartType="Bar" data={chartData} />
+        <ChartContainer
+          title="User Activity Over Time"
+          chartType="Line"
+          data={chartData}
+        />
       </div>
     </div>
   );

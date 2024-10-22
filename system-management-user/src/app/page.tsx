@@ -11,28 +11,133 @@ interface User {
   phone: string;
 }
 
-export default function Home() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+function useDarkMode() {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    fetch("https://jsonplaceholder.typicode.com/users")
-      .then((response) => response.json())
-      .then((data) => setUsers(data.slice(0, 5)));
-
-    setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
-
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       setIsDarkMode(true);
       document.documentElement.classList.add("dark");
     }
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => !prev);
+    const newTheme = !isDarkMode ? "dark" : "light";
+    document.documentElement.classList.toggle("dark", !isDarkMode);
+    localStorage.setItem("theme", newTheme);
+  };
+
+  return { isDarkMode, toggleDarkMode };
+}
+
+function useAuth() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+  }, []);
+
+  const handleLogin = (email: string, password: string) => {
+    if (email && password) {
+      setIsLoggedIn(true);
+      localStorage.setItem("isLoggedIn", "true");
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    localStorage.removeItem("isLoggedIn");
+  };
+
+  return { isLoggedIn, handleLogin, handleLogout };
+}
+
+function UserTable({
+  users,
+  handleEdit,
+  handleDelete,
+}: {
+  users: User[];
+  handleEdit: (user: User) => void;
+  handleDelete: (id: number) => void;
+}) {
+  return (
+    <table className="min-w-full bg-white dark:bg-gray-800 border rounded-lg">
+      <thead>
+        <tr>
+          <th className="py-3 px-4 border-b text-gray-700 dark:text-gray-300">
+            Name
+          </th>
+          <th className="py-3 px-4 border-b text-gray-700 dark:text-gray-300">
+            Email
+          </th>
+          <th className="py-3 px-4 border-b text-gray-700 dark:text-gray-300">
+            Phone
+          </th>
+          <th className="py-3 px-4 border-b text-gray-700 dark:text-gray-300">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {users.length > 0 ? (
+          users.map((user) => (
+            <tr
+              key={user.id}
+              className="hover:bg-gray-100 dark:hover:bg-gray-700">
+              <td className="py-3 px-4 border-b text-gray-900 dark:text-gray-300">
+                {user.name}
+              </td>
+              <td className="py-3 px-4 border-b text-gray-900 dark:text-gray-300">
+                {user.email}
+              </td>
+              <td className="py-3 px-4 border-b text-gray-900 dark:text-gray-300">
+                {user.phone}
+              </td>
+              <td className="py-3 px-4 border-b space-x-2">
+                <button
+                  onClick={() => handleEdit(user)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(user.id)}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td
+              colSpan={4}
+              className="py-4 px-4 text-center text-gray-500 dark:text-gray-300">
+              No users found.
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+export default function Home() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { isLoggedIn, handleLogin, handleLogout } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    fetch("https://jsonplaceholder.typicode.com/users")
+      .then((response) => response.json())
+      .then((data) => setUsers(data.slice(0, 5)));
   }, []);
 
   const addUser = (newUser: User) => {
@@ -56,7 +161,6 @@ export default function Home() {
     }
   };
 
-  // Filter and sort users based on search term and sort order
   const filteredAndSortedUsers = users
     .filter((user) =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -67,33 +171,16 @@ export default function Home() {
         : b.name.localeCompare(a.name)
     );
 
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (email && password) {
-      setIsLoggedIn(true);
-      localStorage.setItem("isLoggedIn", "true");
-    }
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    localStorage.removeItem("isLoggedIn");
-  };
-
-  // Toggle dark mode and save preference to localStorage
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-    const newTheme = !isDarkMode ? "dark" : "light";
-    document.documentElement.classList.toggle("dark", !isDarkMode);
-    localStorage.setItem("theme", newTheme);
-  };
-
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
           <h2 className="text-2xl font-bold mb-4">Login</h2>
-          <form onSubmit={handleLogin}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin(email, password);
+            }}>
             <div className="mb-4">
               <label
                 htmlFor="email"
@@ -128,7 +215,7 @@ export default function Home() {
             </div>
             <button
               type="submit"
-              className="w-full bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 focus:ring-4 focus:ring-green-300 transition ease-in-out">
+              className="w-full bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 focus:ring-4 focus:ring-green-300">
               Login
             </button>
           </form>
@@ -149,12 +236,12 @@ export default function Home() {
         <div className="flex justify-between mb-10">
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:ring focus:ring-red-300 transition ease-in-out">
+            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
             Logout
           </button>
           <button
             onClick={toggleDarkMode}
-            className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 focus:ring focus:ring-gray-300 transition ease-in-out">
+            className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800">
             {isDarkMode ? "Light Mode" : "Dark Mode"}
           </button>
         </div>
@@ -193,64 +280,11 @@ export default function Home() {
           </div>
         </div>
 
-        <table className="min-w-full bg-white dark:bg-gray-800 border rounded-lg">
-          <thead>
-            <tr>
-              <th className="py-3 px-4 border-b text-gray-700 dark:text-gray-300">
-                Name
-              </th>
-              <th className="py-3 px-4 border-b text-gray-700 dark:text-gray-300">
-                Email
-              </th>
-              <th className="py-3 px-4 border-b text-gray-700 dark:text-gray-300">
-                Phone
-              </th>
-              <th className="py-3 px-4 border-b text-gray-700 dark:text-gray-300">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAndSortedUsers.length > 0 ? (
-              filteredAndSortedUsers.map((user) => (
-                <tr
-                  key={user.id}
-                  className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                  <td className="py-3 px-4 border-b text-gray-900 dark:text-gray-300">
-                    {user.name}
-                  </td>
-                  <td className="py-3 px-4 border-b text-gray-900 dark:text-gray-300">
-                    {user.email}
-                  </td>
-                  <td className="py-3 px-4 border-b text-gray-900 dark:text-gray-300">
-                    {user.phone}
-                  </td>
-                  <td className="py-3 px-4 border-b space-x-2">
-                    <button
-                      onClick={() => setEditingUser(user)}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:ring focus:ring-blue-300 transition ease-in-out">
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteUser(user.id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:ring focus:ring-red-300 transition ease-in-out">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="py-4 px-4 text-center text-gray-500 dark:text-gray-300">
-                  No users found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-
+        <UserTable
+          users={filteredAndSortedUsers}
+          handleEdit={setEditingUser}
+          handleDelete={deleteUser}
+        />
         <Dashboard users={users} />
       </div>
     </div>

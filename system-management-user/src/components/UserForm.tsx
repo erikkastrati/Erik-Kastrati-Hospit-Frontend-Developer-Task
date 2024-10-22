@@ -14,17 +14,11 @@ interface UserFormProps {
   isDarkMode: boolean;
 }
 
-export default function UserForm({
-  addUser,
-  editingUser,
-  updateUser,
-  isDarkMode,
-}: UserFormProps) {
-  const [formValues, setFormValues] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
+const useFormValues = (
+  initialState: { name: string; email: string; phone: string },
+  editingUser: User | null
+) => {
+  const [formValues, setFormValues] = useState(initialState);
 
   useEffect(() => {
     if (editingUser) {
@@ -33,6 +27,8 @@ export default function UserForm({
         email: editingUser.email,
         phone: editingUser.phone,
       });
+    } else {
+      setFormValues(initialState);
     }
   }, [editingUser]);
 
@@ -44,6 +40,56 @@ export default function UserForm({
     }));
   };
 
+  return { formValues, setFormValues, handleChange };
+};
+
+const InputField = ({
+  id,
+  label,
+  type,
+  value,
+  onChange,
+  isDarkMode,
+}: {
+  id: string;
+  label: string;
+  type: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isDarkMode: boolean;
+}) => (
+  <div>
+    <label
+      htmlFor={id}
+      className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
+      {label}
+    </label>
+    <input
+      type={type}
+      id={id}
+      placeholder={`Enter ${label.toLowerCase()}`}
+      value={value}
+      onChange={onChange}
+      required
+      className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+        isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-900"
+      }`}
+    />
+  </div>
+);
+
+export default function UserForm({
+  addUser,
+  editingUser,
+  updateUser,
+  isDarkMode,
+}: UserFormProps) {
+  const initialState = { name: "", email: "", phone: "" };
+  const { formValues, setFormValues, handleChange } = useFormValues(
+    initialState,
+    editingUser
+  );
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const newUser = {
@@ -52,7 +98,7 @@ export default function UserForm({
     };
 
     editingUser ? updateUser(newUser) : addUser(newUser);
-    setFormValues({ name: "", email: "", phone: "" });
+    setFormValues(initialState); // Reset form
   };
 
   return (
@@ -64,68 +110,31 @@ export default function UserForm({
       <form
         onSubmit={handleSubmit}
         className="space-y-6 max-w-lg mx-auto bg-white p-8 shadow-md rounded-lg dark:bg-gray-900">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
-            Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            placeholder="Enter name"
-            value={formValues.name}
-            onChange={handleChange}
-            required
-            className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              isDarkMode
-                ? "bg-gray-800 text-gray-200"
-                : "bg-white text-gray-900"
-            }`}
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            placeholder="Enter email"
-            value={formValues.email}
-            onChange={handleChange}
-            required
-            className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              isDarkMode
-                ? "bg-gray-800 text-gray-200"
-                : "bg-white text-gray-900"
-            }`}
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="phone"
-            className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
-            Phone
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            placeholder="Enter phone number"
-            value={formValues.phone}
-            onChange={handleChange}
-            required
-            className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              isDarkMode
-                ? "bg-gray-800 text-gray-200"
-                : "bg-white text-gray-900"
-            }`}
-          />
-        </div>
+        {/* Input fields using the reusable InputField component */}
+        <InputField
+          id="name"
+          label="Name"
+          type="text"
+          value={formValues.name}
+          onChange={handleChange}
+          isDarkMode={isDarkMode}
+        />
+        <InputField
+          id="email"
+          label="Email"
+          type="email"
+          value={formValues.email}
+          onChange={handleChange}
+          isDarkMode={isDarkMode}
+        />
+        <InputField
+          id="phone"
+          label="Phone"
+          type="tel"
+          value={formValues.phone}
+          onChange={handleChange}
+          isDarkMode={isDarkMode}
+        />
 
         <button
           type="submit"
