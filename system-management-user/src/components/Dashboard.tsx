@@ -42,7 +42,7 @@ const useUserStats = (users: User[]) => {
     const calculateUserStats = () => {
       const totalUsers = users.length;
       const usersLastWeek = users.filter((user) => {
-        const createdAt = new Date(user.id); // Assuming ID is timestamp
+        const createdAt = new Date(user.id);
         const lastWeek = new Date();
         lastWeek.setDate(lastWeek.getDate() - 7);
         return createdAt > lastWeek;
@@ -91,8 +91,8 @@ const ChartContainer = ({
 };
 
 export default function Dashboard({ users }: { users: User[] }) {
-  const userStats = useUserStats(users); // Using custom hook
-  const chartData = getChartData(userStats); // Chart data abstraction
+  const userStats = useUserStats(users);
+  const chartData = getChartData(userStats);
 
   return (
     <div>
