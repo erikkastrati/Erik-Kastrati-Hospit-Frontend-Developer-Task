@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Main from "@/components/Main";
 
 export default function Home() {
-  const { isLoggedIn } = useAuth(); // Use the custom hook
+  const { isLoggedIn } = useAuth(); 
 
   if (!isLoggedIn) {
     return (
